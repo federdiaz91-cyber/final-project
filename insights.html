@@ -37,7 +37,7 @@
         .lang-switch button { width: auto; padding: 5px 10px; margin: 0; font-size: 0.9em; }
 
         /* Button Styling */
-        #logout-button, #dashboard-button {
+        #logout-button, #dashboard-button, #home-button {
             padding: 8px; border-radius: 8px; 
             color: white !important; border: 1px solid #c2185b !important; cursor: pointer;
             transition: background-color 0.2s;
@@ -51,7 +51,7 @@
             background-color: #c2185b !important; 
         }
 
-        /* Dashboard Button Style (New) */
+        /* Dashboard Button Style */
         #dashboard-button {
             background-color: #00897B !important; 
             border-color: #004d40 !important;
@@ -59,6 +59,16 @@
         }
         #dashboard-button:hover {
             background-color: #004d40 !important;
+        }
+
+        /* Home Button Style (New) */
+        #home-button {
+            background-color: #D81B60 !important; 
+            border-color: #AD1457 !important;
+            font-weight: bold;
+        }
+        #home-button:hover {
+            background-color: #AD1457 !important;
         }
         
         .container {
@@ -136,6 +146,10 @@
         
         <div class="action-group">
 
+            <button id="home-button" onclick="window.location.href='index.html'">
+                Back to Home
+            </button>
+            
             <button id="dashboard-button" onclick="window.location.href='staff-grading-dashboard.html'">
                 Back to Dashboard
             </button>
@@ -194,19 +208,19 @@
         // --- MULTILINGUAL TRANSLATIONS ---
         const translations = {
             en: {
-                mainHeader: "Staff Insights Dashboard", logout: "Logout", welcome: "Welcome,", dashboard: "Back to Dashboard",
+                mainHeader: "Staff Insights Dashboard", logout: "Logout", welcome: "Welcome,", dashboard: "Back to Dashboard", home: "Back to Home",
                 kpiTotalRequests: "Total Requests", kpiCompletedRequests: "Completed Requests", kpiCancellationRate: "Cancellation Rate",
                 cancelledLogHeader: "Cancelled Orders Log", thOrder: "Order Pattern", thCancelledBy: "Cancelled By", thDate: "Date", thReason: "Reason",
                 noCancelledOrders: "No cancelled orders found.",
             },
             es: {
-                mainHeader: "Panel de Perspectivas del Personal", logout: "Cerrar Sesión", welcome: "Bienvenido,", dashboard: "Volver al Panel",
+                mainHeader: "Panel de Perspectivas del Personal", logout: "Cerrar Sesión", welcome: "Bienvenido,", dashboard: "Volver al Panel", home: "Volver a Inicio",
                 kpiTotalRequests: "Solicitudes Totales", kpiCompletedRequests: "Solicitudes Completadas", kpiCancellationRate: "Tasa de Cancelación",
                 cancelledLogHeader: "Registro de Pedidos Cancelados", thOrder: "Patrón del Pedido", thCancelledBy: "Cancelado Por", thDate: "Fecha", thReason: "Razón",
                 noCancelledOrders: "No se encontraron pedidos cancelados.",
             },
             it: {
-                mainHeader: "Dashboard Statistiche Staff", logout: "Esci", welcome: "Benvenuto,", dashboard: "Torna alla Dashboard",
+                mainHeader: "Dashboard Statistiche Staff", logout: "Esci", welcome: "Benvenuto,", dashboard: "Torna alla Dashboard", home: "Torna a Casa",
                 kpiTotalRequests: "Richieste Totali", kpiCompletedRequests: "Richieste Completate", kpiCancellationRate: "Tasso di Annullamento",
                 cancelledLogHeader: "Registro Ordini Annullati", thOrder: "Modello Ordine", thCancelledBy: "Annullato Da", thDate: "Data", thReason: "Motivo",
                 noCancelledOrders: "Nessun ordine annullato trovato.",
@@ -222,7 +236,8 @@
             document.getElementById('pageTitle').textContent = translations[lang].mainHeader;
             document.getElementById('mainHeader').textContent = translations[lang].mainHeader;
             document.getElementById('logout-button').textContent = translations[lang].logout;
-            document.getElementById('dashboard-button').textContent = translations[lang].dashboard; // NEW BUTTON LABEL
+            document.getElementById('dashboard-button').textContent = translations[lang].dashboard;
+            document.getElementById('home-button').textContent = translations[lang].home; // NEW BUTTON LABEL
             
             document.getElementById('kpiTotalRequests').textContent = translations[lang].kpiTotalRequests;
             document.getElementById('kpiCompletedRequests').textContent = translations[lang].kpiCompletedRequests;
