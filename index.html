@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title id="pageTitle">Welcome to Melisa's Scaling System</title>
+    <style>
+        /* --- General Styles (Keep the girly aesthetic) --- */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            flex-direction: column; 
+        }
+        .header {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            position: absolute; 
+            top: 20px;
+            right: 20px;
+        }
+        .lang-switch {
+            display: flex;
+            gap: 10px;
+        }
+        .lang-switch button {
+            width: auto; 
+            padding: 5px 10px; 
+            border-radius: 8px;
+            background-color: #880e4f; 
+            color: white;
+            border: 1px solid #c2185b;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .lang-switch button:hover {
+            background-color: #c2185b;
+        }
+        
+        /* --- Container and Content Styles --- */
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 40px 60px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(136, 14, 79, 0.2);
+            margin-top: 50px; 
+        }
+        h1 {
+            color: #880e4f;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+        .options {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .options a {
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        /* Client Button Style */
+        .client-link {
+            background-color: #f06292; 
+            color: white;
+            border: 2px solid #e91e63;
+        }
+        .client-link:hover {
+            background-color: #e91e63;
+            transform: translateY(-2px);
+        }
+        /* Staff Button Style */
+        .staff-link {
+            background-color: #5d4037; 
+            color: white;
+            border: 2px solid #4e342e;
+        }
+        .staff-link:hover {
+            background-color: #4e342e;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="lang-switch">
+            <button onclick="setLanguage('en')">EN</button>
+            <button onclick="setLanguage('es')">ES</button>
+            <button onclick="setLanguage('it')">IT</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 id="welcomeHeader">Welcome to Melisa's Scaling System</h1>
+        <p id="promptText">Please select your entry point:</p>
+        <div class="options">
+            <a href="public-grading-request.html" class="client-link" id="clientLink">Client Submission</a>
+            <a href="login.html" class="staff-link" id="staffLink">Staff Login</a>
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            en: {
+                pageTitle: "Welcome to Melisa's Scaling System",
+                welcomeHeader: "Welcome to Melisa's Scaling System",
+                promptText: "Please select your entry point:",
+                clientLink: "Client Submission",
+                staffLink: "Staff Login"
+            },
+            es: {
+                pageTitle: "Bienvenido al Sistema de Escala de Melisa",
+                welcomeHeader: "Bienvenido al Sistema de Escala de Melisa",
+                promptText: "Seleccione su punto de entrada:",
+                clientLink: "Envío del Cliente",
+                staffLink: "Acceso del Personal"
+            },
+            it: {
+                pageTitle: "Benvenuto nel Sistema di Scalatura di Melisa",
+                welcomeHeader: "Benvenuto nel Sistema di Scalatura di Melisa",
+                promptText: "Seleziona il tuo punto di accesso:",
+                clientLink: "Invio del Cliente",
+                staffLink: "Accesso Staff"
+            }
+        };
+
+        let currentLang = 'en';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+
+            // Update static elements
+            document.getElementById('pageTitle').textContent = t.pageTitle;
+            document.getElementById('welcomeHeader').textContent = t.welcomeHeader;
+            document.getElementById('promptText').textContent = t.promptText;
+            document.getElementById('clientLink').textContent = t.clientLink;
+            document.getElementById('staffLink').textContent = t.staffLink;
+        }
+
+        // Initialize with default language
+        setLanguage('en'); 
+    </script>
+</body>
+</html>

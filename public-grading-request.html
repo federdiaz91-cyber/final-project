@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title id="pageTitle">Custom Shirt Scaling Request</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="firebase-config.js"></script>
+    <style>
+        /* --- GIRLY AESTHETIC CSS --- */
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px 0; 
+            display: flex; 
+            justify-content: center; 
+            /* Soft Pink Gradient Background */
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%); 
+            color: #333; 
+        }
+        .container { 
+            background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
+            padding: 40px; 
+            border-radius: 15px; /* Softer corners */
+            box-shadow: 0 8px 16px rgba(171, 71, 188, 0.15); /* Soft, purple shadow */
+            width: 100%; 
+            max-width: 600px; 
+        }
+        h1 { color: #5D4037; text-align: center; margin-bottom: 25px; }
+        label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.95em; color: #333; }
+        input[type="text"], input[type="email"], input[type="number"], select, textarea { 
+            width: 100%; 
+            padding: 10px; 
+            margin-top: 5px; 
+            box-sizing: border-box; 
+            border: 1px solid #ddd; 
+            border-radius: 4px;
+        }
+        textarea { resize: vertical; min-height: 100px; }
+        
+        /* Updated Button Styling */
+        button { 
+            width: 100%; padding: 12px; margin-top: 25px; 
+            background-color: #880e4f !important; /* Deep Pink/Berry */
+            color: white !important; 
+            border: 1px solid #c2185b !important;
+            border-radius: 8px; /* Slightly softer button corners */
+            cursor: pointer; font-size: 1.1em; transition: background-color 0.2s; 
+        }
+        button:hover { background-color: #c2185b !important; }
+        
+        #message { margin-top: 20px; text-align: center; font-weight: bold; }
+        .lang-switch { text-align: right; margin-bottom: 10px; }
+        
+        /* Table Styling for Measurements */
+        .measurement-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .measurement-table th, .measurement-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .measurement-table th { background-color: #f2f2f2; font-weight: bold; }
+        .measurement-table input { border: none; padding: 0; margin: 0; width: 100%; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lang-switch">
+            <button onclick="setLanguage('en')" style="width: auto; padding: 5px 10px; margin: 0;">English</button>
+            <button onclick="setLanguage('es')" style="width: auto; padding: 5px 10px; margin: 0;">Español</button>
+            <button onclick="setLanguage('it')" style="width: auto; padding: 5px 10px; margin: 0;">Italiano</button>
+        </div>
+        
+        <h1 id="header">Custom Shirt Scaling Request</h1>
+        <p id="subHeader">Submit details for scaling a custom shirt pattern.</p>
+
+        <form id="requestForm">
+            <label for="name" data-en="Your Name" data-es="Tu Nombre" data-it="Il tuo Nome">Your Name</label>
+            <input type="text" id="name" required>
+
+            <label for="email" data-en="Your Email" data-es="Tu Correo" data-it="La tua Email">Your Email</label>
+            <input type="email" id="email" required>
+
+            <label for="patternName" data-en="Select Shirt Pattern Type" data-es="Seleccione el Tipo de Patrón de Camisa" data-it="Seleziona il Tipo di Cartamodello">Select Shirt Pattern Type</label>
+            <select id="patternName" required>
+                <option value="" disabled selected>-- Select One Shirt --</option>
+                <option value="Classic Oxford Shirt">Classic Oxford Shirt</option>
+                <option value="Casual Hawaiian Shirt">Casual Hawaiian Shirt</option>
+                <option value="Tailored Dress Shirt">Tailored Dress Shirt</option>
+                <option value="Oversized Tunic Shirt">Oversized Tunic Shirt</option>
+                <option value="Utility Work Shirt">Utility Work Shirt</option>
+                <option value="Polo T-Shirt Block">Polo T-Shirt Block</option>
+            </select>
+            <h3 style="margin-top: 30px; margin-bottom: 10px;" data-en="Original Measurements (in cm)" data-es="Medidas Originales (en cm)" data-it="Misure Originali (in cm)">Original Measurements (in cm)</h3>
+            <table class="measurement-table">
+                <thead>
+                    <tr>
+                        <th data-en="Measure" data-es="Medida" data-it="Misura">Measure</th>
+                        <th data-en="Value" data-es="Valor" data-it="Valore">Value (cm)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td data-en="Centre Length" data-es="Largo Central" data-it="Lunghezza Centrale">Centre Length</td>
+                        <td><input type="number" id="m-CentreLength" required min="1" placeholder="e.g., 75"></td>
+                    </tr>
+                    <tr>
+                        <td data-en="Bust Width" data-es="Ancho Busto" data-it="Larghezza Busto">Bust Width</td>
+                        <td><input type="number" id="m-BustWidth" required min="1" placeholder="e.g., 55"></td>
+                    </tr>
+                    <tr>
+                        <td data-en="Base Width" data-es="Ancho Base" data-it="Larghezza Fondo">Base Width</td>
+                        <td><input type="number" id="m-BaseWidth" required min="1" placeholder="e.g., 50"></td>
+                    </tr>
+                    <tr>
+                        <td data-en="Sleeve Length" data-es="Largo Manga" data-it="Lunghezza Manica">Sleeve Length</td>
+                        <td><input type="number" id="m-SleeveLength" required min="1" placeholder="e.g., 60"></td>
+                    </tr>
+                    <tr>
+                        <td data-en="Sleeve Width" data-es="Ancho Manga" data-it="Larghezza Manica">Sleeve Width</td>
+                        <td><input type="number" id="m-SleeveWidth" required min="1" placeholder="e.g., 20"></td>
+                    </tr>
+                    <tr>
+                        <td data-en="Neck Length" data-es="Largo Cuello" data-it="Lunghezza Collo">Neck Length</td>
+                        <td><input type="number" id="m-NeckLength" required min="1" placeholder="e.g., 40"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <label for="targetScale" data-en="Desired Scale Percentage (+/-)" data-es="Porcentaje de Escala Deseado (+/-)" data-it="Percentuale di Scala Desiderata (+/-)">Desired Scale Percentage (+/-):</label>
+            <input type="number" id="targetScale" min="-50" max="200" value="0" placeholder="e.g., 20 for 20% increase, -10 for 10% decrease" required>
+            <small id="scaleNote" style="display: block; margin-top: -10px; margin-bottom: 15px; color: #777;" data-en="Enter the percentage you want the entire shirt pattern scaled by." data-es="Ingrese el porcentaje que desea escalar todo el patrón de camisa." data-it="Inserisci la percentuale di cui vuoi scalare l'intero cartamodello della camicia.">Enter the percentage you want the entire shirt pattern scaled by.</small>
+            <label for="gradingPoints" data-en="Specific Instructions/Notes" data-es="Instrucciones/Notas Específicas" data-it="Istruzioni/Note Specifiche">Specific Instructions/Notes</label>
+            <textarea id="gradingPoints"></textarea>
+
+            <button type="submit" id="submitButton" data-en="Submit Shirt Scaling Request" data-es="Enviar Solicitud de Escala de Camisa" data-it="Invia Richiesta di Scalatura della Camicia">Submit Shirt Scaling Request</button>
+        </form>
+
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // Note: The 'db' variable is initialized in firebase-config.js
+        const requestForm = document.getElementById('requestForm');
+        const messageDiv = document.getElementById('message');
+        
+        // --- MULTILINGUAL SUPPORT ---
+        const translations = {
+            en: {
+                pageTitle: "Custom Shirt Scaling Request",
+                header: "Custom Shirt Scaling Request",
+                subHeader: "Submit details for scaling a custom shirt pattern.",
+                'm-CentreLength': 'Centre Length',
+                'm-BustWidth': 'Bust Width',
+                'm-BaseWidth': 'Base Width',
+                'm-SleeveLength': 'Sleeve Length',
+                'm-SleeveWidth': 'Sleeve Width',
+                'm-NeckLength': 'Neck Length'
+            },
+            es: {
+                pageTitle: "Solicitud de Escala de Camisa Personalizada",
+                header: "Solicitud de Escala de Camisa Personalizada",
+                subHeader: "Envíe detalles para escalar un patrón de camisa personalizado.",
+                'm-CentreLength': 'Largo Central',
+                'm-BustWidth': 'Ancho Busto',
+                'm-BaseWidth': 'Ancho Base',
+                'm-SleeveLength': 'Largo Manga',
+                'm-SleeveWidth': 'Ancho Manga',
+                'm-NeckLength': 'Largo Cuello'
+            },
+            it: {
+                pageTitle: "Richiesta Scalatura Camicia Personalizzata",
+                header: "Richiesta Scalatura Camicia Personalizzata",
+                subHeader: "Invia i dettagli per scalare un cartamodello di camicia personalizzato.",
+                'm-CentreLength': 'Lunghezza Centrale',
+                'm-BustWidth': 'Larghezza Busto',
+                'm-BaseWidth': 'Larghezza Fondo',
+                'm-SleeveLength': 'Lunghezza Manica',
+                'm-SleeveWidth': 'Larghezza Manica',
+                'm-NeckLength': 'Lunghezza Collo'
+            }
+        };
+
+        function setLanguage(lang) {
+            document.querySelectorAll('[data-en]').forEach(el => {
+                const translationKey = el.getAttribute('data-' + lang);
+
+                if (el.tagName === 'LABEL' || el.tagName === 'SMALL' || el.tagName === 'TD' || el.tagName === 'TH' || el.tagName === 'H3') {
+                    if (translationKey) {
+                        el.textContent = translationKey;
+                    }
+                } else if (el.tagName === 'BUTTON') {
+                    if (translationKey) {
+                        el.textContent = translationKey;
+                    }
+                }
+            });
+
+            // Update Header/Title
+            if (translations[lang].pageTitle) document.getElementById('pageTitle').textContent = translations[lang].pageTitle;
+            if (translations[lang].header) document.getElementById('header').textContent = translations[lang].header;
+            if (translations[lang].subHeader) document.getElementById('subHeader').textContent = translations[lang].subHeader;
+        }
+
+        // Default to English on load
+        setLanguage('en'); 
+        
+        // --- FIREBASE SUBMISSION LOGIC ---
+
+        requestForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            messageDiv.textContent = 'Submitting request...';
+            messageDiv.style.color = '#FFA000'; // Orange
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const patternName = document.getElementById('patternName').value; 
+            const targetScale = document.getElementById('targetScale').value; 
+            const gradingPoints = document.getElementById('gradingPoints').value;
+
+            // Collect all 6 measurement inputs into an object
+            const originalMeasurements = {
+                centreLength: parseFloat(document.getElementById('m-CentreLength').value),
+                bustWidth: parseFloat(document.getElementById('m-BustWidth').value),
+                baseWidth: parseFloat(document.getElementById('m-BaseWidth').value),
+                sleeveLength: parseFloat(document.getElementById('m-SleeveLength').value),
+                sleeveWidth: parseFloat(document.getElementById('m-SleeveWidth').value),
+                neckLength: parseFloat(document.getElementById('m-NeckLength').value)
+            };
+            
+            // Basic validation for the dropdown
+            if (!patternName) {
+                messageDiv.textContent = 'Error: Please select a shirt type.';
+                messageDiv.style.color = '#b71c1c';
+                return;
+            }
+            // Basic validation for measurements (check if any value is NaN)
+            if (Object.values(originalMeasurements).some(isNaN)) {
+                 messageDiv.textContent = 'Error: Please ensure all measurements are valid numbers.';
+                messageDiv.style.color = '#b71c1c';
+                return;
+            }
+
+
+            try {
+                await db.collection("gradingRequests").add({
+                    name: name,
+                    email: email,
+                    patternName: patternName, 
+                    originalMeasurements: originalMeasurements, 
+                    targetScale: parseFloat(targetScale), 
+                    gradingPoints: gradingPoints,
+                    status: 'Pending Review',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                messageDiv.textContent = 'Request submitted successfully! We will contact you soon.';
+                messageDiv.style.color = '#4CAF50'; // Green
+                requestForm.reset();
+
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                messageDiv.textContent = 'Error: Failed to submit request. Please check console for details.';
+                messageDiv.style.color = '#b71c1c'; // Red
+            }
+        });
+    </script>
+</body>
+</html>

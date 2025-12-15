@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title id="pageTitle">Staff Scaling Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="firebase-config.js"></script>
+    <style>
+        /* --- GENERAL AESTHETICS --- */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%); 
+            color: #333;
+        }
+        .header {
+            background-color: #880e4f; /* Deep Pink/Berry */
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { margin: 0; font-size: 1.8em; }
+        .action-group {
+            display: flex; 
+            align-items: center; 
+            gap: 15px;
+        }
+        .lang-switch { display: flex; gap: 10px; }
+        .lang-switch button { width: auto; padding: 5px 10px; margin: 0; font-size: 0.9em; }
+        .dashboard-container { padding: 20px; display: flex; gap: 20px; max-width: 1600px; margin: 0 auto; }
+        .column { flex: 1; min-width: 250px; }
+        .column h2 { border-bottom: 2px solid #f8bbd0; padding-bottom: 5px; color: #c2185b; margin-top: 0; }
+        .card {
+            background-color: rgba(255, 255, 255, 0.9); padding: 20px; margin-bottom: 20px;
+            border-radius: 15px; box-shadow: 0 4px 8px rgba(171, 71, 188, 0.15); transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); }
+        .card h3 { color: #5D4037; margin-top: 0; font-size: 1.3em; border-bottom: 1px dashed #f8bbd0; padding-bottom: 10px; }
+        .details p { margin: 5px 0; font-size: 0.9em; }
+        
+        /* Button Styles */
+        .staff-action-form input[type="text"], .staff-action-form button, #logout-button, #insights-button {
+            padding: 8px; border-radius: 8px; margin-top: 10px;
+        }
+        .staff-action-form button, #logout-button, #insights-button, .lang-switch button, .modal button {
+            background-color: #880e4f !important; color: white !important;
+            border: 1px solid #c2185b !important; cursor: pointer; transition: background-color 0.2s;
+        }
+        .staff-action-form button:hover, #logout-button:hover, .lang-switch button:hover, .modal button:hover {
+            background-color: #c2185b !important;
+        }
+        /* Style the new Insights Button differently for emphasis */
+        #insights-button {
+            background-color: #00897B !important; 
+            border-color: #004d40 !important;
+            margin-right: 15px; /* Separate from user display/logout */
+            font-weight: bold;
+        }
+        #insights-button:hover {
+            background-color: #004d40 !important;
+        }
+
+        .completed-card { opacity: 0.7; background-color: #f3e5f5; }
+        textarea { resize: none; }
+
+        /* --- CANCELLATION MODAL STYLES --- */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; 
+            width: 100%; height: 100%; overflow: auto; 
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe; margin: 15% auto; padding: 20px;
+            border: 1px solid #888; width: 80%; max-width: 400px;
+            border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .modal-content h3 { color: #B71C1C; margin-top: 0; }
+        .modal-content input[type="text"], .modal-content input[type="password"] {
+            width: 95%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px;
+        }
+        .modal-buttons { text-align: right; }
+        .modal-buttons button { margin-left: 10px; padding: 10px 15px; }
+        .modal-buttons .confirm { background-color: #B71C1C !important; }
+        .modal-buttons .confirm:hover { background-color: #d32f2f !important; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1 id="mainHeader">Shirt Scaling Staff Dashboard</h1>
+        
+        <div class="action-group">
+            
+            <button id="insights-button" onclick="window.location.href='insights.html'">
+                View Insights
+            </button>
+            
+             <div class="lang-switch">
+                <button onclick="setLanguage('en')">EN</button>
+                <button onclick="setLanguage('es')">ES</button>
+                <button onclick="setLanguage('it')">IT</button>
+            </div>
+            
+            <span id="user-display" style="font-weight: bold;"></span>
+            <button id="logout-button" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="column" id="pending-column">
+            <h2 id="pendingHeader">Pending Review</h2>
+        </div>
+        <div class="column" id="in-progress-column">
+            <h2 id="inProgressHeader">In Progress</h2>
+        </div>
+        <div class="column" id="completed-column">
+            <h2 id="completedHeader">Completed</h2>
+        </div>
+        <div class="column" id="cancelled-column">
+            <h2 id="cancelledHeader">Cancelled</h2>
+        </div>
+    </div>
+
+    <div id="cancellationModal" class="modal">
+      <div class="modal-content">
+        <h3 id="modalTitle">Confirm Cancellation</h3>
+        
+        <label for="cancellationReasonInput" id="labelReason">Reason (min 5 chars):</label>
+        <input type="text" id="cancellationReasonInput" placeholder="Enter reason">
+
+        <label for="cancellationPasswordInput" id="labelPassword">Password Confirmation:</label>
+        <input type="password" id="cancellationPasswordInput" placeholder="Enter your password">
+
+        <div id="modalError" style="color: #B71C1C; margin-bottom: 10px;"></div>
+
+        <div class="modal-buttons">
+            <button id="modalCancelBtn">Cancel</button>
+            <button id="modalConfirmBtn" class="confirm">Confirm</button>
+        </div>
+      </div>
+    </div>
+    <script>
+        // Note: 'db' and 'firebase' are initialized in firebase-config.js
+        const auth = firebase.auth();
+        const pendingColumn = document.getElementById('pending-column');
+        const inProgressColumn = document.getElementById('in-progress-column');
+        const completedColumn = document.getElementById('completed-column');
+        const cancelledColumn = document.getElementById('cancelled-column'); 
+        const userDisplay = document.getElementById('user-display');
+        const insightsButton = document.getElementById('insights-button');
+        const requestDataMap = new Map(); // Global Map to store original measurements
+        
+        // Modal elements
+        const modal = document.getElementById('cancellationModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const labelReason = document.getElementById('labelReason');
+        const reasonInput = document.getElementById('cancellationReasonInput');
+        const labelPassword = document.getElementById('labelPassword');
+        const passwordInput = document.getElementById('cancellationPasswordInput');
+        const modalError = document.getElementById('modalError');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+
+        let currentDocId = null; // To hold the ID of the order being cancelled
+        
+        // --- MULTILINGUAL TRANSLATIONS ---
+        const translations = {
+            en: {
+                mainHeader: "Shirt Scaling Staff Dashboard", pendingHeader: "Pending Review", inProgressHeader: "In Progress", completedHeader: "Completed", cancelledHeader: "Cancelled", logout: "Logout", welcome: "Welcome,", insights: "View Insights", 
+                status: "Status:", clientEmail: "Client Email:", targetScale: "Target Scale Percentage:", staffName: "Staff:", staffNameLabel: "Staff Name:", staffPlaceholder: "Your Name", acceptButton: "Accept & Start Scaling", inProgressText: "Currently handled by:", completeButton: "Mark as Completed", cancelButton: "Cancel Order", completedBy: "Completed by", cancelledBy: "Cancelled by", notes: "Notes:", none: "None", originalMeasuresHeader: "Original Measurements (cm)", scalingToolHeader: "Scaling Calculator (Factor:", selectDimensionLabel: "Select Dimension:", selectMeasureOption: "-- Select Measure --", calculateButton: "Calculate Scaled Value", scaledResult: "Scaled Result:", generateButton: "Generate Print-Ready Data", printPlaceholder: "Click 'Generate Print-Ready Data' to see the full list of scaled measurements.", statusPending: "Pending Review", statusInProgress: "In Progress", statusCompleted: "Completed", statusCancelled: "Cancelled",
+                modalTitle: "Confirm Cancellation", labelReason: "Reason (min 5 chars):", labelPassword: "Password Confirmation:", modalConfirmBtn: "Confirm", modalCancelBtn: "Cancel", cancellationReason: "Cancellation Reason:", cancellationAlert: "Order successfully cancelled.", errorReasonLength: "The cancellation reason must be at least 5 characters long.", errorPassword: "Confirmation failed. The password you entered is incorrect.", errorAuth: "Authentication error. Please log in again.",
+                // NEW: Label for the header to identify the client email
+                clientHeaderLabel: "Client:", 
+            },
+            es: {
+                mainHeader: "Panel de Control de Escala de Camisas para Personal", pendingHeader: "Pendiente de Revisión", inProgressHeader: "En Progreso", completedHeader: "Completado", cancelledHeader: "Cancelado", logout: "Cerrar Sesión", welcome: "Bienvenido,", insights: "Ver Perspectivas",
+                status: "Estado:", clientEmail: "Correo del Cliente:", targetScale: "Porcentaje de Escala Objetivo:", staffName: "Personal:", staffNameLabel: "Nombre del Empleado:", staffPlaceholder: "Tu Nombre", acceptButton: "Aceptar e Iniciar Escala", inProgressText: "Actualmente manejado por:", completeButton: "Marcar como Completado", cancelButton: "Cancelar Pedido", completedBy: "Completado por", cancelledBy: "Cancelado por", notes: "Notas:", none: "Ninguna", originalMeasuresHeader: "Medidas Originales (cm)", scalingToolHeader: "Calculadora de Escala (Factor:", selectDimensionLabel: "Seleccionar Dimensión:", selectMeasureOption: "-- Seleccionar Medida --", calculateButton: "Calcular Valor Escalado", scaledResult: "Resultado Escalado:", generateButton: "Generar Datos Listos para Imprimir", printPlaceholder: "Haga clic en 'Generar Datos Listos para Imprimir' para ver la lista completa de medidas escaladas.", statusPending: "Pendiente de Revisión", statusInProgress: "En Progreso", statusCompleted: "Completado", statusCancelled: "Cancelado",
+                modalTitle: "Confirmar Cancelación", labelReason: "Razón (mín. 5 caracteres):", labelPassword: "Confirmación de Contraseña:", modalConfirmBtn: "Confirmar", modalCancelBtn: "Cancelar", cancellationReason: "Razón de Cancelación:", cancellationAlert: "Pedido cancelado con éxito.", errorReasonLength: "La razón de cancelación debe tener al menos 5 caracteres.", errorPassword: "Confirmación fallida. La contraseña ingresada es incorrecta.", errorAuth: "Error de autenticación. Por favor inicie sesión de nuevo.",
+                // NEW: Label for the header to identify the client email
+                clientHeaderLabel: "Cliente:",
+            },
+            it: {
+                mainHeader: "Dashboard di Scalatura Camicie per Staff", pendingHeader: "In Attesa di Revisione", inProgressHeader: "In Corso", completedHeader: "Completato", cancelledHeader: "Annullato", logout: "Esci", welcome: "Benvenuto,", insights: "Visualizza Statistiche",
+                status: "Stato:", clientEmail: "Email del Cliente:", targetScale: "Percentuale di Scala Obiettivo:", staffName: "Staff:", staffNameLabel: "Nome dello Staff:", staffPlaceholder: "Il tuo Nome", acceptButton: "Accetta e Inizia Scalatura", inProgressText: "Attualmente gestito da:", completeButton: "Segna come Completato", cancelButton: "Annulla Ordine", completedBy: "Completato da", cancelledBy: "Annullato da", notes: "Note:", none: "Nessuna", originalMeasuresHeader: "Misure Originali (cm)", scalingToolHeader: "Calcolatore di Scalatura (Fattore:", selectDimensionLabel: "Seleziona Dimensione:", selectMeasureOption: "-- Seleziona Misura --", calculateButton: "Calcola Valore Scalato", scaledResult: "Risultato Scalato:", generateButton: "Genera Dati Pronti per la Stampa", printPlaceholder: "Fare clic su 'Genera Dati Pronti per la Stampa' per visualizzare l'elenco completo delle misure scalate.", statusPending: "In Attesa di Revisione", statusInProgress: "In Corso", statusCompleted: "Completato", statusCancelled: "Annullato",
+                modalTitle: "Conferma Annullamento", labelReason: "Motivo (min 5 caratteri):", labelPassword: "Conferma Password:", modalConfirmBtn: "Conferma", modalCancelBtn: "Annulla", cancellationReason: "Motivo della Cancellazione:", cancellationAlert: "Ordine annullato con successo.", errorReasonLength: "Il motivo della cancellazione deve contenere almeno 5 caratteri.", errorPassword: "Conferma fallita. La password inserita non è corretta.", errorAuth: "Errore di autenticazione. Per favore, accedi di nuovo.",
+                // NEW: Label for the header to identify the client email
+                clientHeaderLabel: "Cliente:",
+            }
+        };
+
+        let currentLang = 'en';
+
+        function getTranslatedStatus(statusKey) {
+            if (statusKey === 'Pending Review') return translations[currentLang].statusPending;
+            if (statusKey === 'In Progress') return translations[currentLang].statusInProgress;
+            if (statusKey === 'Completed') return translations[currentLang].statusCompleted;
+            if (statusKey === 'Cancelled') return translations[currentLang].statusCancelled;
+            return statusKey; 
+        }
+        
+        function setLanguage(lang) {
+            currentLang = lang;
+            
+            // 1. Static Headers
+            document.getElementById('pageTitle').textContent = translations[lang].mainHeader;
+            document.getElementById('mainHeader').textContent = translations[lang].mainHeader;
+            document.getElementById('pendingHeader').textContent = translations[lang].pendingHeader;
+            document.getElementById('inProgressHeader').textContent = translations[lang].inProgressHeader;
+            document.getElementById('completedHeader').textContent = translations[lang].completedHeader;
+            document.getElementById('cancelledHeader').textContent = translations[lang].cancelledHeader;
+            document.getElementById('logout-button').textContent = translations[lang].logout;
+            document.getElementById('insights-button').textContent = translations[lang].insights; 
+            
+            // 2. Modal Text
+            modalTitle.textContent = translations[lang].modalTitle;
+            labelReason.textContent = translations[lang].labelReason;
+            labelPassword.textContent = translations[lang].labelPassword;
+            modalConfirmBtn.textContent = translations[lang].modalConfirmBtn;
+            modalCancelBtn.textContent = translations[lang].modalCancelBtn;
+
+            // Update user display text
+            const user = auth.currentUser;
+            if (user) {
+                document.getElementById('user-display').textContent = `${translations[lang].welcome} ${user.email}`;
+            }
+
+            // 3. Force a full redraw of the dynamic content 
+            listenForRequests();
+        }
+
+        // Default to English on load
+        setLanguage('en'); 
+
+        // --- AUTHENTICATION GUARD ---
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('user-display').textContent = `${translations[currentLang].welcome} ${user.email}`;
+                listenForRequests();
+            } else {
+                // Redirects to login.html
+                window.location.href = 'login.html';
+            }
+        });
+
+        function logout() {
+            auth.signOut().then(() => {
+                // Redirects to login.html
+                window.location.href = 'login.html';
+            }).catch(error => {
+                console.error("Logout Error:", error);
+            });
+        }
+        // --- END AUTHENTICATION GUARD ---
+        
+        function formatKey(key) {
+            return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        }
+
+        // --- FETCHING AND RENDERING ---
+        function listenForRequests() {
+            // Clears existing content before fetching/rendering to avoid duplicates
+            pendingColumn.innerHTML = `<h2 id="pendingHeader">${translations[currentLang].pendingHeader}</h2>`;
+            inProgressColumn.innerHTML = `<h2 id="inProgressHeader">${translations[currentLang].inProgressHeader}</h2>`;
+            completedColumn.innerHTML = `<h2 id="completedHeader">${translations[currentLang].completedHeader}</h2>`;
+            cancelledColumn.innerHTML = `<h2 id="cancelledHeader">${translations[currentLang].cancelledHeader}</h2>`;
+            requestDataMap.clear();
+            
+            db.collection('gradingRequests').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+                // Re-clear columns on snapshot update to prevent duplication during real-time changes
+                pendingColumn.innerHTML = `<h2 id="pendingHeader">${translations[currentLang].pendingHeader}</h2>`;
+                inProgressColumn.innerHTML = `<h2 id="inProgressHeader">${translations[currentLang].inProgressHeader}</h2>`;
+                completedColumn.innerHTML = `<h2 id="completedHeader">${translations[currentLang].completedHeader}</h2>`;
+                cancelledColumn.innerHTML = `<h2 id="cancelledHeader">${translations[currentLang].cancelledHeader}</h2>`;
+                requestDataMap.clear();
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const docId = doc.id;
+                    const date = data.createdAt ? data.createdAt.toDate().toLocaleDateString() : 'N/A';
+                    
+                    requestDataMap.set(docId, data); 
+
+                    const card = document.createElement('div');
+                    card.className = 'card';
+
+                    let actionHtml = '';
+                    let statusColor = '#FFA000'; 
+                    let staffLabel = translations[currentLang].staffNameLabel;
+                    let staffPlaceholder = translations[currentLang].staffPlaceholder;
+                    let acceptBtn = translations[currentLang].acceptButton;
+                    let notesLabel = translations[currentLang].notes;
+                    let notesValue = data.gradingPoints || translations[currentLang].none;
+                    let translatedStatus = getTranslatedStatus(data.status);
+                    
+                    const originalMeasuresHeader = translations[currentLang].originalMeasuresHeader;
+                    const scalingToolHeader = translations[currentLang].scalingToolHeader;
+                    const selectDimensionLabel = translations[currentLang].selectDimensionLabel;
+                    const selectMeasureOption = translations[currentLang].selectMeasureOption;
+                    const calculateButton = translations[currentLang].calculateButton;
+                    const scaledResult = translations[currentLang].scaledResult;
+                    const generateButton = translations[currentLang].generateButton;
+                    const printPlaceholder = translations[currentLang].printPlaceholder;
+                    const clientEmailLabel = translations[currentLang].clientEmail;
+                    const targetScaleLabel = translations[currentLang].targetScale;
+                    const statusLabel = translations[currentLang].status;
+                    
+                    // --- REVISED HEADER CONTENT ---
+                    const clientHeaderLabel = translations[currentLang].clientHeaderLabel;
+                    const headerClientValue = data.email || 'N/A';
+                    
+                    // The client's email is now in the header, so we can hide the email line in the details
+                    let emailInDetails = '';
+                    // The client email is already in the header, so we'll show the staff name/status here instead.
+                    let staffInDetails = `<p><strong>${translations[currentLang].staffName}</strong> ${data.staffName || 'Unassigned'}</p>`; 
+                    // -----------------------------
+
+
+                    if (data.status === 'Pending Review') {
+                        statusColor = '#FFA000';
+                        actionHtml = `
+                            <form class="staff-action-form" onsubmit="acceptOrder(event, '${docId}')">
+                                <label for="staffName-${docId}">${staffLabel}</label>
+                                <input type="text" id="staffName-${docId}" required placeholder="${staffPlaceholder}">
+                                <button type="submit">${acceptBtn}</button>
+                            </form>
+                        `;
+                    } else if (data.status === 'In Progress') {
+                        statusColor = '#4CAF50'; 
+                        let completeBtn = translations[currentLang].completeButton;
+                        let inProgressText = translations[currentLang].inProgressText;
+                        let cancelBtn = translations[currentLang].cancelButton;
+
+                        actionHtml = `
+                            <p style="font-weight: bold; margin-bottom: 0;">${inProgressText} ${data.staffName || 'N/A'}</p>
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button onclick="completeOrder('${docId}')" style="background-color: #00897B !important; flex-grow: 1;">${completeBtn}</button>
+                                <button onclick="openCancellationModal('${docId}')" style="background-color: #B71C1C !important; flex-grow: 1;">${cancelBtn}</button>
+                            </div>
+                        `;
+                    } else if (data.status === 'Completed') {
+                        statusColor = '#5D4037'; 
+                        let completedByText = translations[currentLang].completedBy;
+                        card.classList.add('completed-card');
+                        actionHtml = `<p>${completedByText} ${data.staffName} on ${data.completedAt ? data.completedAt.toDate().toLocaleDateString() : 'N/A'}</p>`;
+                    } else if (data.status === 'Cancelled') { 
+                        statusColor = '#B71C1C'; 
+                        let cancelledByText = translations[currentLang].cancelledBy;
+                        let reasonLabel = translations[currentLang].cancellationReason;
+                        card.classList.add('completed-card');
+                        actionHtml = `
+                            <p>${cancelledByText} ${data.staffName} on ${data.cancelledAt ? data.cancelledAt.toDate().toLocaleDateString() : 'N/A'}</p>
+                            <p><strong>${reasonLabel}</strong> ${data.cancellationReason || 'N/A'}</p>
+                        `;
+                    }
+                    
+                    card.innerHTML = `
+                        <h3>${data.patternName || 'N/A'} - ${clientHeaderLabel} ${headerClientValue} 
+                            <span style="float:right; color:#777; font-size:0.8em;">${date}</span>
+                        </h3>
+                        <p><strong>${statusLabel}</strong> <span style="font-weight: bold; color: ${statusColor};">${translatedStatus}</span></p>
+
+                        <div class="details">
+                            ${staffInDetails}
+                            <p><strong>${targetScaleLabel}</strong> 
+                                <span style="font-weight:bold; color:#880e4f;">${data.targetScale}%</span>
+                            </p>
+                            <p><strong>${notesLabel}</strong> ${notesValue}</p>
+
+                            <h4 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">${originalMeasuresHeader}</h4>
+                            <div class="measurements-display" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                                ${Object.entries(data.originalMeasurements || {}).map(([key, value]) => 
+                                    `<p style="margin: 0;"><strong>${formatKey(key)}:</strong> ${value} cm</p>`
+                                ).join('')}
+                            </div>
+                        </div>
+
+                        <div class="scaling-tool" style="margin-top: 25px; padding: 15px; border: 1px dashed #c2185b; border-radius: 8px;">
+                            <h4>${scalingToolHeader} ${data.targetScale}%)</h4>
+                            
+                            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                                <label for="dimSelect-${docId}" style="font-weight: normal; margin: 0;">${selectDimensionLabel}</label>
+                                <select id="dimSelect-${docId}" style="padding: 5px; flex-grow: 1;">
+                                    <option value="" disabled selected>${selectMeasureOption}</option>
+                                    ${Object.entries(data.originalMeasurements || {}).map(([key, value]) => 
+                                        `<option value="${key}">${formatKey(key)} (${value || 0} cm)</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <button onclick="calculateScale('${docId}')" style="width: 40%; background-color: #d81b60 !important; margin: 0;">${calculateButton}</button>
+                                <p style="margin: 0; font-size: 1.1em;">${scaledResult} 
+                                    <span id="scaledResult-${docId}" style="font-weight: bold; color: #880e4f;">---</span>
+                                </p>
+                            </div>
+
+                            <div style="margin-top: 15px; border-top: 1px solid #c2185b; padding-top: 10px;">
+                                <button onclick="generatePrintReadyData('${docId}')" style="width: 100%; background-color: #5D4037 !important; margin-top: 0;">${generateButton}</button>
+                                <textarea id="printData-${docId}" rows="8" style="width: 100%; margin-top: 10px; font-family: monospace; font-size: 0.9em;" placeholder="${printPlaceholder}" readonly></textarea>
+                            </div>
+                        </div>
+                        
+                        ${actionHtml}
+                    `;
+
+                    if (data.status === 'Pending Review') {
+                        pendingColumn.appendChild(card);
+                    } else if (data.status === 'In Progress') {
+                        inProgressColumn.appendChild(card);
+                    } else if (data.status === 'Completed') {
+                        completedColumn.appendChild(card);
+                    } else if (data.status === 'Cancelled') {
+                        cancelledColumn.appendChild(card);
+                    }
+                });
+            });
+        }
+        
+        // --- STAFF ACTIONS (ACCEPT & COMPLETE) ---
+        async function acceptOrder(event, docId) {
+            event.preventDefault();
+            const staffNameInput = document.getElementById(`staffName-${docId}`);
+            const staffName = staffNameInput ? staffNameInput.value.trim() : null; 
+            if (!staffName) { alert("Please enter your name before accepting the order."); return; }
+            const docRef = db.collection('gradingRequests').doc(docId);
+            try {
+                await docRef.update({ status: 'In Progress', staffName: staffName, startedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                console.log(`Successfully updated document ${docId} to In Progress.`);
+            } catch (error) {
+                console.error("Error accepting document: ", error); alert("Failed to accept order. Check console and permissions.");
+            }
+        }
+
+        async function completeOrder(docId) {
+            if (!confirm("Are you sure you want to mark this order as Completed?")) { return; }
+            const docRef = db.collection('gradingRequests').doc(docId);
+            try {
+                await docRef.update({ status: 'Completed', completedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                alert(translations[currentLang].cancellationAlert); // Reusing cancellation alert for completion notice
+            } catch (error) {
+                console.error("Error completing document: ", error); alert("Failed to complete order. Check console and permissions.");
+            }
+        }
+
+        // --- STAFF ACTIONS (SECURE CANCELLATION) ---
+
+        function openCancellationModal(docId) {
+            currentDocId = docId;
+            modalError.textContent = '';
+            reasonInput.value = '';
+            passwordInput.value = '';
+            modal.style.display = 'block';
+        }
+
+        // Close modal when user clicks outside
+        window.onclick = function(event) {
+          if (event.target == modal) {
+            modal.style.display = "none";
+          }
+        }
+
+        modalCancelBtn.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        modalConfirmBtn.onclick = handleCancellationSubmit;
+
+
+        async function handleCancellationSubmit() {
+            modalError.textContent = '';
+            const reason = reasonInput.value.trim();
+            const password = passwordInput.value;
+
+            if (reason.length < 5) {
+                modalError.textContent = translations[currentLang].errorReasonLength;
+                return;
+            }
+
+            const user = auth.currentUser;
+            if (!user) {
+                modalError.textContent = translations[currentLang].errorAuth;
+                modal.style.display = 'none';
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                // 1. Re-authenticate the user with their current email and the provided password
+                const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+                await user.reauthenticateWithCredential(credential);
+                
+                // 2. If re-authentication succeeds, proceed with the database update
+                await cancelOrder(currentDocId, reason, user.displayName || user.email);
+                
+                modal.style.display = 'none';
+
+            } catch (error) {
+                console.error("Re-authentication or Cancellation Error: ", error);
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                    modalError.textContent = translations[currentLang].errorPassword;
+                } else {
+                    modalError.textContent = "An error occurred during cancellation. Check console.";
+                }
+            }
+        }
+
+        async function cancelOrder(docId, reason, staffIdentifier) {
+            const docRef = db.collection('gradingRequests').doc(docId);
+            const alertMessage = translations[currentLang].cancellationAlert;
+            
+            try {
+                await docRef.update({
+                    status: 'Cancelled',
+                    cancellationReason: reason,
+                    staffName: staffIdentifier.split('@')[0], 
+                    cancelledAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert(alertMessage);
+            } catch (error) {
+                console.error("Error updating document to Cancelled: ", error);
+                alert("Failed to update status to Cancelled. Check console and permissions.");
+            }
+        }
+
+        // --- SCALING TOOLS ---
+        function calculateScale(docId) {
+            const selectElement = document.getElementById(`dimSelect-${docId}`);
+            const resultSpan = document.getElementById(`scaledResult-${docId}`);
+            const data = requestDataMap.get(docId); 
+            const selectedKey = selectElement.value; 
+            
+            if (!selectedKey || !data) { resultSpan.textContent = "Error: Select a valid measure."; return; } // Using hardcoded error for simplicity here
+            const originalDimension = data.originalMeasurements[selectedKey];
+            const targetScale = data.targetScale;
+
+            if (isNaN(originalDimension) || originalDimension <= 0) { resultSpan.textContent = "Invalid Dimension"; return; } 
+            if (isNaN(targetScale)) { resultSpan.textContent = "Error: Missing Scale Factor."; return; }
+            
+            const scaleFactor = 1 + (targetScale / 100);
+            const scaledDimension = originalDimension * scaleFactor;
+            
+            resultSpan.textContent = scaledDimension.toFixed(2) + " cm";
+        }
+        
+        function generatePrintReadyData(docId) {
+            const outputArea = document.getElementById(`printData-${docId}`);
+            const data = requestDataMap.get(docId); 
+            
+            if (!data || !data.originalMeasurements || Object.keys(data.originalMeasurements).length === 0) {
+                outputArea.value = translations[currentLang].errorMissingOriginal; return;
+            }
+
+            const originalMeasurements = data.originalMeasurements;
+            const targetScale = data.targetScale;
+            if (isNaN(targetScale)) { outputArea.value = translations[currentLang].missingScaleFactor; return; }
+
+            const scaleFactor = 1 + (targetScale / 100);
+            const outputLines = [];
+
+            outputLines.push("--- PRINT READY SCALING DATA ---");
+            outputLines.push(`Pattern: ${data.patternName}`);
+            outputLines.push(`Scale Factor Applied: ${scaleFactor.toFixed(3)} (Target: ${targetScale}%)`);
+            outputLines.push("--------------------------------");
+
+            for (const key in originalMeasurements) {
+                if (originalMeasurements.hasOwnProperty(key)) {
+                    const original = originalMeasurements[key];
+                    const scaled = original * scaleFactor;
+                    outputLines.push(`${formatKey(key)}: ${scaled.toFixed(2)} cm (Original: ${original} cm)`);
+                }
+            }
+            outputLines.push("--------------------------------");
+            
+            outputArea.value = outputLines.join('\n');
+            outputArea.select(); 
+            alert("Print data generated and ready to copy!");
+        }
+
+    </script>
+</body>
+</html>
