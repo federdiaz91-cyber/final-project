@@ -143,12 +143,14 @@
     </div>
 
     <script>
-        // Check if firebase is initialized via firebase-config.js
+        let auth; 
+
+        // Check for Firebase initialization and initialize auth
         if (typeof firebase === 'undefined' || !firebase.apps.length) {
             console.error("Firebase not initialized. Ensure firebase-config.js is correctly linked and configured.");
         } else {
-            // Initialize auth service
-            const auth = firebase.auth();
+            // Initialize auth service 
+            auth = firebase.auth(); 
         }
 
         const loginForm = document.getElementById('loginForm');
@@ -157,6 +159,12 @@
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            if (!auth) {
+                messageElement.textContent = "System Error: Firebase Authentication not configured correctly.";
+                messageElement.style.color = '#b71c1c';
+                return;
+            }
+
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
@@ -167,11 +175,10 @@
                 // Firebase Sign In
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
                 
-                // Success: Redirect to staff dashboard/main staff page
+                // Success: REDIRECT TO STAFF GRADING DASHBOARD
                 console.log("User logged in:", userCredential.user.email);
-                
-                // Assuming your staff dashboard is staff-dashboard.html
-                window.location.href = 'staff-dashboard.html'; 
+                // Corrected destination file name
+                window.location.href = 'staff-grading-dashboard.html'; 
 
             } catch (error) {
                 // Failure: Display error message
