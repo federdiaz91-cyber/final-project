@@ -7,54 +7,178 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="firebase-config.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f4f4f4; margin: 0; }
-        .login-container { background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
-        h2 { color: #5D4037; margin-bottom: 20px; }
-        label { display: block; text-align: left; margin-top: 10px; font-weight: bold; font-size: 0.9em; color: #333; }
-        input[type="email"], input[type="password"] { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; }
-        button { width: 100%; padding: 10px; background-color: #00897B; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em; transition: background-color 0.2s; }
-        button:hover { background-color: #00695C; }
-        #auth-error { color: #b71c1c; margin-top: 15px; font-weight: bold; display: none; }
+        /* --- GENERAL AESTHETICS (Consistent with other files) --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            justify-content: flex-start;
+            align-items: center;
+            /* Pink Gradient Background */
+            background: linear-gradient(135deg, #fce4ec 0%, #f06292 15%, #f8bbd0 100%); 
+            background-attachment: fixed;
+            color: #333;
+        }
+        
+        /* --- HEADER STYLES --- */
+        .header-bar {
+            width: 100%;
+            background-color: #880e4f; /* Deep Pink/Berry */
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .header-bar h1 { margin: 0; font-size: 1.8em; color: white; }
+
+        /* --- HOME BUTTON STYLE --- */
+        #home-button {
+            padding: 10px 18px; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+            font-size: 1.0em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            
+            background-color: #D81B60 !important; 
+            color: white !important;
+            border: none !important; 
+            box-shadow: 0 4px 10px rgba(216, 27, 96, 0.4);
+        }
+        #home-button:hover {
+            background-color: #AD1457 !important;
+            transform: scale(1.05);
+        }
+
+        /* --- CONTAINER AND FORM STYLES --- */
+        .container { 
+            margin-top: 50px;
+            max-width: 400px;
+            width: 90%;
+            padding: 40px;
+            background-color: rgba(255, 255, 255, 0.98);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(136, 14, 79, 0.15);
+            text-align: center;
+        }
+        h2 {
+            color: #880e4f;
+            border-bottom: 2px solid #f8bbd0;
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            text-align: left;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #5D4037;
+        }
+        input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        #loginButton {
+            width: 100%; 
+            padding: 15px; 
+            margin-top: 30px; 
+            background-color: #880e4f; 
+            color: white; 
+            border: none;
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 1.1em; 
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.2s; 
+        }
+        #loginButton:hover { 
+            background-color: #c2185b; 
+            transform: translateY(-2px);
+        }
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #b71c1c; /* Red for errors */
+        }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Staff Login</h2>
+
+    <div class="header-bar">
+        <h1>Staff Login Portal</h1>
+        
+        <button id="home-button" onclick="window.location.href='index.html'">
+            Back to Home
+        </button>
+    </div>
+
+    <div class="container">
+        <h2>Staff Access</h2>
         <form id="loginForm">
-            <label for="email">Email</label>
+            <label for="email">Email:</label>
             <input type="email" id="email" required>
-            
-            <label for="password">Password</label>
+
+            <label for="password">Password:</label>
             <input type="password" id="password" required>
-            
-            <button type="submit">Sign In</button>
-            <p id="auth-error"></p>
+
+            <button type="submit" id="loginButton">Login</button>
+            <div id="message" class="message"></div>
         </form>
     </div>
 
     <script>
-        const auth = firebase.auth();
+        // Check if firebase is initialized via firebase-config.js
+        if (typeof firebase === 'undefined' || !firebase.apps.length) {
+            console.error("Firebase not initialized. Ensure firebase-config.js is correctly linked and configured.");
+        } else {
+            // Initialize auth service
+            const auth = firebase.auth();
+        }
+
         const loginForm = document.getElementById('loginForm');
-        const authError = document.getElementById('auth-error');
+        const messageElement = document.getElementById('message');
 
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            authError.style.display = 'none';
-
+            
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            auth.signInWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    // Sign-in successful. Redirect to the staff dashboard.
-                    window.location.href = 'staff-grading-dashboard.html';
-                })
-                .catch((error) => {
-                    // Handle errors
-                    authError.textContent = 'Login Failed: Invalid email or password.';
-                    authError.style.display = 'block';
-                    console.error("Login error:", error.code, error.message);
-                });
+            messageElement.textContent = 'Logging in...';
+            messageElement.style.color = '#FFA000'; // Orange loading color
+
+            try {
+                // Firebase Sign In
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                
+                // Success: Redirect to staff dashboard/main staff page
+                console.log("User logged in:", userCredential.user.email);
+                
+                // Assuming your staff dashboard is staff-dashboard.html
+                window.location.href = 'staff-dashboard.html'; 
+
+            } catch (error) {
+                // Failure: Display error message
+                console.error("Login Error:", error.message);
+                messageElement.textContent = `Login Failed: ${error.message}`;
+                messageElement.style.color = '#b71c1c'; // Red error color
+            }
         });
     </script>
 </body>
