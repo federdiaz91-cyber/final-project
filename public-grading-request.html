@@ -11,22 +11,79 @@
         body { 
             font-family: Arial, sans-serif; 
             margin: 0; 
-            padding: 20px 0; 
-            display: flex; 
-            justify-content: center; 
+            padding: 0;
             /* Soft Pink Gradient Background */
             background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%); 
             color: #333; 
         }
+
+        /* --- HEADER STYLES --- */
+        .header-bar {
+            background-color: #880e4f; /* Deep Pink/Berry Background */
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        /* CHANGE: Title color set to white for contrast */
+        .header-bar h1 { 
+            margin: 0; 
+            font-size: 1.8em; 
+            color: white; /* Explicitly setting color to white */
+        }
+        
+        .action-group {
+            display: flex; 
+            align-items: center; 
+            gap: 15px;
+        }
+
+        /* --- BUTTON STYLING --- */
+        /* General button style reset for action group */
+        .action-group button {
+            width: auto; 
+            padding: 8px 12px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold;
+            transition: background-color 0.2s; 
+            font-size: 0.9em;
+        }
+        
+        /* Language Switch Button Styles */
+        .lang-switch button {
+            background-color: #c2185b;
+            color: white;
+            border: 1px solid #AD1457;
+        }
+        .lang-switch button:hover {
+            background-color: #d81b60;
+        }
+
+        /* HOME BUTTON STYLE */
+        #home-button {
+            background-color: #D81B60 !important; 
+            color: white !important;
+            border: 1px solid #AD1457 !important; 
+        }
+        #home-button:hover {
+            background-color: #AD1457 !important;
+        }
+
+
+        /* --- CONTAINER AND FORM STYLES --- */
         .container { 
-            background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
+            background-color: rgba(255, 255, 255, 0.9); 
             padding: 40px; 
-            border-radius: 15px; /* Softer corners */
-            box-shadow: 0 8px 16px rgba(171, 71, 188, 0.15); /* Soft, purple shadow */
+            border-radius: 15px; 
+            box-shadow: 0 8px 16px rgba(171, 71, 188, 0.15); 
             width: 100%; 
             max-width: 600px; 
+            margin: 30px auto;
         }
-        h1 { color: #5D4037; text-align: center; margin-bottom: 25px; }
+        /* NOTE: The h1 inside the container is no longer present, this style applies to other elements inside the container */
+        .container h1 { color: #5D4037; text-align: center; margin-bottom: 25px; } 
         label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.95em; color: #333; }
         input[type="text"], input[type="email"], input[type="number"], select, textarea { 
             width: 100%; 
@@ -38,19 +95,19 @@
         }
         textarea { resize: vertical; min-height: 100px; }
         
-        /* Updated Button Styling */
-        button { 
+        /* Submit Button Styling */
+        #submitButton { 
             width: 100%; padding: 12px; margin-top: 25px; 
-            background-color: #880e4f !important; /* Deep Pink/Berry */
+            background-color: #880e4f !important; 
             color: white !important; 
             border: 1px solid #c2185b !important;
-            border-radius: 8px; /* Slightly softer button corners */
-            cursor: pointer; font-size: 1.1em; transition: background-color 0.2s; 
+            border-radius: 8px; 
+            cursor: pointer; font-size: 1.1em; 
+            transition: background-color 0.2s; 
         }
-        button:hover { background-color: #c2185b !important; }
+        #submitButton:hover { background-color: #c2185b !important; }
         
         #message { margin-top: 20px; text-align: center; font-weight: bold; }
-        .lang-switch { text-align: right; margin-bottom: 10px; }
         
         /* Table Styling for Measurements */
         .measurement-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -60,14 +117,23 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="lang-switch">
-            <button onclick="setLanguage('en')" style="width: auto; padding: 5px 10px; margin: 0;">English</button>
-            <button onclick="setLanguage('es')" style="width: auto; padding: 5px 10px; margin: 0;">Español</button>
-            <button onclick="setLanguage('it')" style="width: auto; padding: 5px 10px; margin: 0;">Italiano</button>
+    
+    <div class="header-bar">
+        <h1 id="mainHeaderTitle">Custom Shirt Scaling Request</h1>
+        <div class="action-group">
+            <button id="home-button" onclick="window.location.href='index.html'" data-en="Back to Home" data-es="Volver a Inicio" data-it="Torna a Casa">
+                Back to Home
+            </button>
+            
+             <div class="lang-switch">
+                <button onclick="setLanguage('en')">EN</button>
+                <button onclick="setLanguage('es')">ES</button>
+                <button onclick="setLanguage('it')">IT</button>
+            </div>
         </div>
+    </div>
+    <div class="container">
         
-        <h1 id="header">Custom Shirt Scaling Request</h1>
         <p id="subHeader">Submit details for scaling a custom shirt pattern.</p>
 
         <form id="requestForm">
@@ -143,36 +209,21 @@
         const translations = {
             en: {
                 pageTitle: "Custom Shirt Scaling Request",
-                header: "Custom Shirt Scaling Request",
+                mainHeaderTitle: "Custom Shirt Scaling Request",
                 subHeader: "Submit details for scaling a custom shirt pattern.",
-                'm-CentreLength': 'Centre Length',
-                'm-BustWidth': 'Bust Width',
-                'm-BaseWidth': 'Base Width',
-                'm-SleeveLength': 'Sleeve Length',
-                'm-SleeveWidth': 'Sleeve Width',
-                'm-NeckLength': 'Neck Length'
+                home: "Back to Home",
             },
             es: {
                 pageTitle: "Solicitud de Escala de Camisa Personalizada",
-                header: "Solicitud de Escala de Camisa Personalizada",
+                mainHeaderTitle: "Solicitud de Escala de Camisa Personalizada",
                 subHeader: "Envíe detalles para escalar un patrón de camisa personalizado.",
-                'm-CentreLength': 'Largo Central',
-                'm-BustWidth': 'Ancho Busto',
-                'm-BaseWidth': 'Ancho Base',
-                'm-SleeveLength': 'Largo Manga',
-                'm-SleeveWidth': 'Ancho Manga',
-                'm-NeckLength': 'Largo Cuello'
+                home: "Volver a Inicio",
             },
             it: {
                 pageTitle: "Richiesta Scalatura Camicia Personalizzata",
-                header: "Richiesta Scalatura Camicia Personalizzata",
+                mainHeaderTitle: "Richiesta Scalatura Camicia Personalizzata",
                 subHeader: "Invia i dettagli per scalare un cartamodello di camicia personalizzato.",
-                'm-CentreLength': 'Lunghezza Centrale',
-                'm-BustWidth': 'Larghezza Busto',
-                'm-BaseWidth': 'Larghezza Fondo',
-                'm-SleeveLength': 'Lunghezza Manica',
-                'm-SleeveWidth': 'Larghezza Manica',
-                'm-NeckLength': 'Lunghezza Collo'
+                home: "Torna a Casa",
             }
         };
 
@@ -191,10 +242,17 @@
                 }
             });
 
-            // Update Header/Title
-            if (translations[lang].pageTitle) document.getElementById('pageTitle').textContent = translations[lang].pageTitle;
-            if (translations[lang].header) document.getElementById('header').textContent = translations[lang].header;
-            if (translations[lang].subHeader) document.getElementById('subHeader').textContent = translations[lang].subHeader;
+            // Update Header/Title and Subheader
+            const t = translations[lang];
+            if (t.pageTitle) document.getElementById('pageTitle').textContent = t.pageTitle;
+            if (t.mainHeaderTitle) document.getElementById('mainHeaderTitle').textContent = t.mainHeaderTitle;
+            if (t.subHeader) document.getElementById('subHeader').textContent = t.subHeader;
+            
+            // Update the Home button content
+            const homeButton = document.getElementById('home-button');
+            if (homeButton && t.home) {
+                homeButton.textContent = t.home;
+            }
         }
 
         // Default to English on load
@@ -229,9 +287,9 @@
                 messageDiv.style.color = '#b71c1c';
                 return;
             }
-            // Basic validation for measurements (check if any value is NaN)
-            if (Object.values(originalMeasurements).some(isNaN)) {
-                 messageDiv.textContent = 'Error: Please ensure all measurements are valid numbers.';
+            // Basic validation for measurements (check if any value is NaN or non-positive)
+            if (Object.values(originalMeasurements).some(val => isNaN(val) || val <= 0)) {
+                 messageDiv.textContent = 'Error: Please ensure all measurements are valid positive numbers.';
                 messageDiv.style.color = '#b71c1c';
                 return;
             }
