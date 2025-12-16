@@ -44,26 +44,35 @@
         .details p { margin: 5px 0; font-size: 0.9em; }
         
         /* Button Styles */
-        .staff-action-form input[type="text"], .staff-action-form button, #logout-button, #insights-button {
+        .staff-action-form input[type="text"], .staff-action-form button, #logout-button, #insights-button, #home-button {
             padding: 8px; border-radius: 8px; margin-top: 10px;
         }
-        .staff-action-form button, #logout-button, #insights-button, .lang-switch button, .modal button {
+        .staff-action-form button, #logout-button, #insights-button, #home-button, .lang-switch button, .modal button {
             background-color: #880e4f !important; color: white !important;
             border: 1px solid #c2185b !important; cursor: pointer; transition: background-color 0.2s;
         }
         .staff-action-form button:hover, #logout-button:hover, .lang-switch button:hover, .modal button:hover {
             background-color: #c2185b !important;
         }
-        /* Style the new Insights Button differently for emphasis */
+        /* Style the Insights Button */
         #insights-button {
             background-color: #00897B !important; 
             border-color: #004d40 !important;
-            margin-right: 15px; /* Separate from user display/logout */
             font-weight: bold;
         }
         #insights-button:hover {
             background-color: #004d40 !important;
         }
+        /* Style the Home Button (New) */
+        #home-button {
+            background-color: #D81B60 !important; 
+            border-color: #AD1457 !important;
+            font-weight: bold;
+        }
+        #home-button:hover {
+            background-color: #AD1457 !important;
+        }
+
 
         .completed-card { opacity: 0.7; background-color: #f3e5f5; }
         textarea { resize: none; }
@@ -96,6 +105,10 @@
         
         <div class="action-group">
             
+            <button id="home-button" onclick="window.location.href='index.html'">
+                Back to Home
+            </button>
+
             <button id="insights-button" onclick="window.location.href='insights.html'">
                 View Insights
             </button>
@@ -153,6 +166,7 @@
         const cancelledColumn = document.getElementById('cancelled-column'); 
         const userDisplay = document.getElementById('user-display');
         const insightsButton = document.getElementById('insights-button');
+        const homeButton = document.getElementById('home-button'); // NEW HOME BUTTON
         const requestDataMap = new Map(); // Global Map to store original measurements
         
         // Modal elements
@@ -171,24 +185,21 @@
         // --- MULTILINGUAL TRANSLATIONS ---
         const translations = {
             en: {
-                mainHeader: "Shirt Scaling Staff Dashboard", pendingHeader: "Pending Review", inProgressHeader: "In Progress", completedHeader: "Completed", cancelledHeader: "Cancelled", logout: "Logout", welcome: "Welcome,", insights: "View Insights", 
+                mainHeader: "Shirt Scaling Staff Dashboard", pendingHeader: "Pending Review", inProgressHeader: "In Progress", completedHeader: "Completed", cancelledHeader: "Cancelled", logout: "Logout", welcome: "Welcome,", insights: "View Insights", home: "Back to Home",
                 status: "Status:", clientEmail: "Client Email:", targetScale: "Target Scale Percentage:", staffName: "Staff:", staffNameLabel: "Staff Name:", staffPlaceholder: "Your Name", acceptButton: "Accept & Start Scaling", inProgressText: "Currently handled by:", completeButton: "Mark as Completed", cancelButton: "Cancel Order", completedBy: "Completed by", cancelledBy: "Cancelled by", notes: "Notes:", none: "None", originalMeasuresHeader: "Original Measurements (cm)", scalingToolHeader: "Scaling Calculator (Factor:", selectDimensionLabel: "Select Dimension:", selectMeasureOption: "-- Select Measure --", calculateButton: "Calculate Scaled Value", scaledResult: "Scaled Result:", generateButton: "Generate Print-Ready Data", printPlaceholder: "Click 'Generate Print-Ready Data' to see the full list of scaled measurements.", statusPending: "Pending Review", statusInProgress: "In Progress", statusCompleted: "Completed", statusCancelled: "Cancelled",
                 modalTitle: "Confirm Cancellation", labelReason: "Reason (min 5 chars):", labelPassword: "Password Confirmation:", modalConfirmBtn: "Confirm", modalCancelBtn: "Cancel", cancellationReason: "Cancellation Reason:", cancellationAlert: "Order successfully cancelled.", errorReasonLength: "The cancellation reason must be at least 5 characters long.", errorPassword: "Confirmation failed. The password you entered is incorrect.", errorAuth: "Authentication error. Please log in again.",
-                // NEW: Label for the header to identify the client email
                 clientHeaderLabel: "Client:", 
             },
             es: {
-                mainHeader: "Panel de Control de Escala de Camisas para Personal", pendingHeader: "Pendiente de Revisión", inProgressHeader: "En Progreso", completedHeader: "Completado", cancelledHeader: "Cancelado", logout: "Cerrar Sesión", welcome: "Bienvenido,", insights: "Ver Perspectivas",
+                mainHeader: "Panel de Control de Escala de Camisas para Personal", pendingHeader: "Pendiente de Revisión", inProgressHeader: "En Progreso", completedHeader: "Completado", cancelledHeader: "Cancelado", logout: "Cerrar Sesión", welcome: "Bienvenido,", insights: "Ver Perspectivas", home: "Volver a Inicio",
                 status: "Estado:", clientEmail: "Correo del Cliente:", targetScale: "Porcentaje de Escala Objetivo:", staffName: "Personal:", staffNameLabel: "Nombre del Empleado:", staffPlaceholder: "Tu Nombre", acceptButton: "Aceptar e Iniciar Escala", inProgressText: "Actualmente manejado por:", completeButton: "Marcar como Completado", cancelButton: "Cancelar Pedido", completedBy: "Completado por", cancelledBy: "Cancelado por", notes: "Notas:", none: "Ninguna", originalMeasuresHeader: "Medidas Originales (cm)", scalingToolHeader: "Calculadora de Escala (Factor:", selectDimensionLabel: "Seleccionar Dimensión:", selectMeasureOption: "-- Seleccionar Medida --", calculateButton: "Calcular Valor Escalado", scaledResult: "Resultado Escalado:", generateButton: "Generar Datos Listos para Imprimir", printPlaceholder: "Haga clic en 'Generar Datos Listos para Imprimir' para ver la lista completa de medidas escaladas.", statusPending: "Pendiente de Revisión", statusInProgress: "En Progreso", statusCompleted: "Completado", statusCancelled: "Cancelado",
                 modalTitle: "Confirmar Cancelación", labelReason: "Razón (mín. 5 caracteres):", labelPassword: "Confirmación de Contraseña:", modalConfirmBtn: "Confirmar", modalCancelBtn: "Cancelar", cancellationReason: "Razón de Cancelación:", cancellationAlert: "Pedido cancelado con éxito.", errorReasonLength: "La razón de cancelación debe tener al menos 5 caracteres.", errorPassword: "Confirmación fallida. La contraseña ingresada es incorrecta.", errorAuth: "Error de autenticación. Por favor inicie sesión de nuevo.",
-                // NEW: Label for the header to identify the client email
                 clientHeaderLabel: "Cliente:",
             },
             it: {
-                mainHeader: "Dashboard di Scalatura Camicie per Staff", pendingHeader: "In Attesa di Revisione", inProgressHeader: "In Corso", completedHeader: "Completato", cancelledHeader: "Annullato", logout: "Esci", welcome: "Benvenuto,", insights: "Visualizza Statistiche",
+                mainHeader: "Dashboard di Scalatura Camicie per Staff", pendingHeader: "In Attesa di Revisione", inProgressHeader: "In Corso", completedHeader: "Completato", cancelledHeader: "Annullato", logout: "Esci", welcome: "Benvenuto,", insights: "Visualizza Statistiche", home: "Torna a Casa",
                 status: "Stato:", clientEmail: "Email del Cliente:", targetScale: "Percentuale di Scala Obiettivo:", staffName: "Staff:", staffNameLabel: "Nome dello Staff:", staffPlaceholder: "Il tuo Nome", acceptButton: "Accetta e Inizia Scalatura", inProgressText: "Attualmente gestito da:", completeButton: "Segna come Completato", cancelButton: "Annulla Ordine", completedBy: "Completato da", cancelledBy: "Annullato da", notes: "Note:", none: "Nessuna", originalMeasuresHeader: "Misure Originali (cm)", scalingToolHeader: "Calcolatore di Scalatura (Fattore:", selectDimensionLabel: "Seleziona Dimensione:", selectMeasureOption: "-- Seleziona Misura --", calculateButton: "Calcola Valore Scalato", scaledResult: "Risultato Scalato:", generateButton: "Genera Dati Pronti per la Stampa", printPlaceholder: "Fare clic su 'Genera Dati Pronti per la Stampa' per visualizzare l'elenco completo delle misure scalate.", statusPending: "In Attesa di Revisione", statusInProgress: "In Corso", statusCompleted: "Completato", statusCancelled: "Annullato",
                 modalTitle: "Conferma Annullamento", labelReason: "Motivo (min 5 caratteri):", labelPassword: "Conferma Password:", modalConfirmBtn: "Conferma", modalCancelBtn: "Annulla", cancellationReason: "Motivo della Cancellazione:", cancellationAlert: "Ordine annullato con successo.", errorReasonLength: "Il motivo della cancellazione deve contenere almeno 5 caratteri.", errorPassword: "Conferma fallita. La password inserita non è corretta.", errorAuth: "Errore di autenticazione. Per favore, accedi di nuovo.",
-                // NEW: Label for the header to identify the client email
                 clientHeaderLabel: "Cliente:",
             }
         };
@@ -215,6 +226,7 @@
             document.getElementById('cancelledHeader').textContent = translations[lang].cancelledHeader;
             document.getElementById('logout-button').textContent = translations[lang].logout;
             document.getElementById('insights-button').textContent = translations[lang].insights; 
+            document.getElementById('home-button').textContent = translations[lang].home; // NEW HOME BUTTON LABEL
             
             // 2. Modal Text
             modalTitle.textContent = translations[lang].modalTitle;
@@ -242,14 +254,14 @@
                 document.getElementById('user-display').textContent = `${translations[currentLang].welcome} ${user.email}`;
                 listenForRequests();
             } else {
-                // Redirects to login.html
+                // Redirects to login.html (as per the recommended structure)
                 window.location.href = 'login.html';
             }
         });
 
         function logout() {
             auth.signOut().then(() => {
-                // Redirects to login.html
+                // Redirects to login.html (as per the recommended structure)
                 window.location.href = 'login.html';
             }).catch(error => {
                 console.error("Logout Error:", error);
@@ -305,17 +317,13 @@
                     const scaledResult = translations[currentLang].scaledResult;
                     const generateButton = translations[currentLang].generateButton;
                     const printPlaceholder = translations[currentLang].printPlaceholder;
-                    const clientEmailLabel = translations[currentLang].clientEmail;
                     const targetScaleLabel = translations[currentLang].targetScale;
                     const statusLabel = translations[currentLang].status;
                     
-                    // --- REVISED HEADER CONTENT ---
+                    // --- REVISED HEADER CONTENT (Client Email) ---
                     const clientHeaderLabel = translations[currentLang].clientHeaderLabel;
                     const headerClientValue = data.email || 'N/A';
                     
-                    // The client's email is now in the header, so we can hide the email line in the details
-                    let emailInDetails = '';
-                    // The client email is already in the header, so we'll show the staff name/status here instead.
                     let staffInDetails = `<p><strong>${translations[currentLang].staffName}</strong> ${data.staffName || 'Unassigned'}</p>`; 
                     // -----------------------------
 
